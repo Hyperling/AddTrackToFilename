@@ -23,7 +23,8 @@
 ## Variables ##
 
 PROG="`basename $0`"
-DIR="`dirname $0`"
+#DIR="`dirname $0`"
+DIR="`pwd`"
 EXT=".mp3"
 ADD="(Fixed)"
 TIME="`which time`"
@@ -119,14 +120,20 @@ time find $DIR -name "*${EXT}" | while read file; do
 	title="`exiftool -Title "$file"`"
 	title="${title//Title   /}"
 	title="${title//   : /}"
+	title="${title//[^[:alnum:][:space:].]/}"
 	title="`echo $title`"
 	echo "Title=$title"
 
 	# Create the new file with the correct filename.
-	new_filename="$track. $title$EXT"
+	new_file="`dirname "$file"`/$track. $title$EXT"
+
 	if [[ ! -z "$track" && ! -z "$title" ]]; then
-		echo "Creating '`basename "$new_filename"`'."
-		mv -v "$file" "$new_filename"
+		if [[ "$file" == "$new_file" ]]; then
+			echo "SKIP: Filename already correct! :)"
+			continue
+		fi
+		echo "Creating '`basename "$new_file"`'."
+		mv -v "$file" "$new_file"
 	elif [[ -z "$track" && ! -z "$title" ]]; then
 		echo "No Track# found, leaving Title alone."
 		continue
@@ -135,10 +142,10 @@ time find $DIR -name "*${EXT}" | while read file; do
 	fi
 
 	# Confirm the new file exists and remove the old file if so
-	if [[ -e "$new_filename" ]]; then
+	if [[ -e "$new_file" ]]; then
 		echo "Success!"
 	else
-		error "$new_filename was not created successfully." 5
+		error "$new_file was not created successfully." 5
 	fi
 done
 
