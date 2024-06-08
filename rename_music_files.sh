@@ -95,7 +95,7 @@ avg_time=0
 total_time=0
 time_count=0
 est_guess=0
-time find $DIR -name "*${EXT}" | while read file; do
+time find $DIR -name "*${EXT}" | sort | while read file; do
 	count=$(( count + 1 ))
 
 	echo -e "\n$file"
@@ -122,6 +122,9 @@ time find $DIR -name "*${EXT}" | while read file; do
 	title="${title//   : /}"
 	title="${title//[^[:alnum:][:space:].]/}"
 	title="`echo $title`"
+	while [[ "$title" == *"  "* ]]; do
+		title="${title//  / }"
+	done
 	echo "Title=$title"
 
 	# Create the new file with the correct filename.
@@ -138,7 +141,8 @@ time find $DIR -name "*${EXT}" | while read file; do
 		echo "No Track# found, leaving Title alone."
 		continue
 	else
-		error "File does not have Track or Title metadata. Are you sure you're running this on music?" 3
+		echo "File does not have Track or Title metadata."
+		continue
 	fi
 
 	# Confirm the new file exists and remove the old file if so
