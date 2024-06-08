@@ -3,35 +3,12 @@
 # Rename all files in a music library based on metadata.
 # Uses the format "[Track]. [Title].mp3"
 
-# TBD Remove all the stuff from AddTrackToTitle.
-
-# 2022-08-30 Hyperling
-# Put the files' Track in their Title so that Toyota Entune plays the songs in the right frikken order!!!
-# At least with the 2019 RAV4, it acknowledges the Track#, but still sorts albums alphabetically for whatever reason.
-#
-# Return Codes:
-#  0) Success!
-#  1) Parameter passed
-#  2) Pre-requisite tool not installed
-#  3) Failure to find music metadata
-#  4) Failure to create fixed file
-#  5) Fixed file is missing
-#  6) Unknown operator
-#
-
-
 ## Variables ##
 
 PROG="`basename $0`"
 #DIR="`dirname $0`"
 DIR="`pwd`"
 EXT=".mp3"
-ADD="(Fixed)"
-TIME="`which time`"
-TRUE="T"
-FALSE="F"
-UNDO="$FALSE"
-
 
 ## Functions ##
 
@@ -44,13 +21,10 @@ function usage {
 		  -h : Help, display the usage and exit succesfully.
 
 		Place this file at the root of your music destined for a flash drive and run it without any parameters.
-		It will dive through all folders and convert your MP3's to have the Track# in the Title.
-		The process changes the filenames to contain (Fixed) so you know it's touched the file.
-		Please be sure you only run this on a copy of your music, not the main source!
+		It will dive through all folders and convert your MP3's to have the Track# and Title in the filename.
 
-		This tool has a few pre-requisites you should make sure you have installed:
+		This tool has a pre-requisite you should make sure you have installed:
 		  - exiftool
-		  - ffmpeg
 
 		Thanks for using $PROG!
 	EOF
@@ -66,7 +40,6 @@ function error {
 	echo -e "\n"
 	usage $2
 }
-
 
 ## Validations ##
 
@@ -85,18 +58,10 @@ if [[ ! `which exiftool` ]]; then
 	error "exiftool not found" 2
 fi
 
-
 ## Main ##
 
 # Loop through all files in and lower than the current directory.
-count=0
-total="`find $DIR -name "*${EXT}" -printf . | wc -c`"
-avg_time=0
-total_time=0
-time_count=0
-est_guess=0
 time find $DIR -name "*${EXT}" | sort | while read file; do
-	count=$(( count + 1 ))
 
 	echo -e "\n$file"
 
@@ -129,12 +94,12 @@ time find $DIR -name "*${EXT}" | sort | while read file; do
 
 	# Create the new file with the correct filename.
 	new_file="`dirname "$file"`/$track. $title$EXT"
+	if [[ "$file" == "$new_file" ]]; then
+		echo "SKIP: Filename already correct! :)"
+		continue
+	fi
 
 	if [[ ! -z "$track" && ! -z "$title" ]]; then
-		if [[ "$file" == "$new_file" ]]; then
-			echo "SKIP: Filename already correct! :)"
-			continue
-		fi
 		echo "Creating '`basename "$new_file"`'."
 		mv -v "$file" "$new_file"
 	elif [[ -z "$track" && ! -z "$title" ]]; then
@@ -153,6 +118,6 @@ time find $DIR -name "*${EXT}" | sort | while read file; do
 	fi
 done
 
-echo -e "\nProcess has completed. Enjoy having your songs in album-order!"
+echo -e "\nProcess has completed. Enjoy having your songs named correctly!"
 
 exit 0
